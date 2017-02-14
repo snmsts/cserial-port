@@ -20,7 +20,7 @@
   :author "Masatoshi SANO <snmsts@gmail.com>"
   :version "0.0.1"
   :licence "MIT"
-  :defsystem-depends-on (:cffi-grovel)
+  #-windows :defsystem-depends-on #-windows (:cffi-grovel)
   :depends-on (:trivial-features
                :cffi
                #-windows :cffi-grovel
