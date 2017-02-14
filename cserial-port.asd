@@ -1,9 +1,16 @@
 ;;;; -*- Mode: Lisp; indent-tabs-mode: nil -*-
 
-'#.(asdf:load-system :trivial-features :verbose nil)
+'#.(progn
+     #+quicklisp
+     (ql:quickload :trivial-features :silent t)
+     #-quicklisp
+     (asdf:load-system :trivial-features :verbose nil))
 
 #-windows
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  #+quicklisp
+  (ql:quickload :cffi-grovel :silent t)
+  #-quicklisp
   (asdf:load-system :cffi-grovel :verbose nil))
 
 (cl:in-package :cl-user)
