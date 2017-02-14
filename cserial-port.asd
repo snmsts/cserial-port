@@ -1,8 +1,10 @@
 ;;;; -*- Mode: Lisp; indent-tabs-mode: nil -*-
 
+'#.(asdf:load-system :trivial-features :verbose nil)
+
 #-windows
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (asdf:oos 'asdf:load-op :cffi-grovel))
+  (asdf:load-system :cffi-grovel :verbose nil))
 
 (cl:in-package :cl-user)
 
@@ -11,8 +13,9 @@
   :author "Masatoshi SANO <snmsts@gmail.com>"
   :version "0.0.1"
   :licence "MIT"
-  :depends-on (:trivial-features 
-               :cffi 
+  :defsystem-depends-on (:cffi-grovel)
+  :depends-on (:trivial-features
+               :cffi
                #-windows :cffi-grovel
                #-windows :iolib.syscalls)
   :components
@@ -21,7 +24,7 @@
             ((:file "package")
              (:file "interfaces")
              #-windows
-             (cffi-grovel:grovel-file "ffi-types" :pathname 
+             (cffi-grovel:grovel-file "ffi-types" :pathname
                                       "ffi-types-unix")
              #-windows
              (:file "posix")
