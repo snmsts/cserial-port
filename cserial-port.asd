@@ -24,7 +24,7 @@
   :depends-on (:trivial-features
                :cffi
                #-windows :cffi-grovel
-               #-windows :iolib.syscalls)
+               #-windows :iolib)
   :components
   ((:module "src"
             :components
