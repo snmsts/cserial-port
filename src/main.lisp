@@ -78,6 +78,15 @@ The result state is a list giving the state of each line in the same order as th
                  (aref res 0))))))
       nil)))
 
+(defun read-serial-port-byte (serial-port &optional (timeout-error-p t))
+  "Reads a byte from a serial port."
+  (declare (ignorable timeout-error-p))
+  (unless (%valid-fd-p serial-port)
+    (error "invalid serial port ~S" serial-port))
+  (cffi:with-foreign-object (b :unsigned-char 1)
+    (when (= (%read serial-port b 1) 1)
+      (cffi:mem-aref b :unsigned-char))))
+
 (defun read-serial-port-string (string serial-port &optional (timeout-error-p t) &key (start 0) (end nil))
   "Reads a string from a serial port."
   (loop :repeat (- (or end (length string)) start)
@@ -136,6 +145,14 @@ If timeout is non-nil then the function will return nil after that many seconds 
    (cffi:with-foreign-string ((b l) (subseq string start end) 
 			      :encoding (serial-port-encoding serial-port))
      (%write serial-port b (1- l)))))
+
+(export
+ (defun write-serial-port-bytes (bytes serial-port &optional (timeout-error-p t) &key (start 0) (end (length bytes)))
+   (declare (ignore timeout-error-p))
+   (unless (%valid-fd-p serial-port)
+     (error "invalid serial port ~S" serial-port))
+   (cffi:with-pointer-to-vector-data (data-sap bytes)
+     (%write serial-port data-sap (- end start)))))
 
 ;;more
 
