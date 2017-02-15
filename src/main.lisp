@@ -113,54 +113,48 @@ The result state is a list giving the state of each line in the same order as th
   "Checks whether a character is available on a serial port."   
   (%input-available-p serial-port))
 
-(export
- (defun set-serial-port-state (serial-port &key dtr rts break)
-   "Changes various aspects of the state of a serial port."
-   t 
-   "Description
+(defun set-serial-port-state (serial-port &key dtr rts break)
+  "Changes various aspects of the state of a serial port."
+  t
+  "Description
 The function set-serial-port-state changes various aspects of the state of the serial port associated with serial-port .
 The argument dtr , if supplied, controls the DTR line. A true value means set and nil means clear. If dtr is not supplied, the state is unchanged.
 The argument rts controls the RTS line in the same way.
 The argument break controls the break state of the data line in the same way."
-   (error "not yet implemented")
-   nil
-   ))
+  (error "not yet implemented")
+  nil)
 
-(export
- (defun wait-serial-port-state (serial-port keys &key timeout)
-   "Waits for some aspect of the state of a serial port to change."
-   t
-   "Description
+(defun wait-serial-port-state (serial-port keys &key timeout)
+  "Waits for some aspect of the state of a serial port to change."
+  t
+  "Description
 The function wait-serial-port-state waits for some state in the serial port associated with serial-port to change.
 The argument keys should be a list of one or more of the keywords :cts , :dsr , :err , :ring , :rlsd and :break .
 result is a list giving the keys for which the state has changed.
 If timeout is non-nil then the function will return nil after that many seconds even if the state has not changed."
-   (error "not yet implemented")
-   nil))
+  (error "not yet implemented")
+  nil)
 
-(export 
- (defun write-serial-port-char (char serial-port &optional (timeout-error-p t))
-   "Writes a character to a serial port."
-   (write-serial-port-string (string char) serial-port timeout-error-p)
-   char))
+(defun write-serial-port-char (char serial-port &optional (timeout-error-p t))
+  "Writes a character to a serial port."
+  (write-serial-port-string (string char) serial-port timeout-error-p)
+  char)
 
-(export
- (defun write-serial-port-string (string serial-port &optional (timeout-error-p t) &key (start 0) (end nil))
-   "Writes a string to a serial port."
-   (declare (ignorable timeout-error-p))
-   (unless (%valid-fd-p serial-port)
-     (error "invalid serial port ~S" serial-port))
-   (cffi:with-foreign-string ((b l) (subseq string start end) 
-			      :encoding (serial-port-encoding serial-port))
-     (%write serial-port b (1- l)))))
+(defun write-serial-port-string (string serial-port &optional (timeout-error-p t) &key (start 0) (end nil))
+  "Writes a string to a serial port."
+  (declare (ignorable timeout-error-p))
+  (unless (%valid-fd-p serial-port)
+    (error "invalid serial port ~S" serial-port))
+  (cffi:with-foreign-string ((b l) (subseq string start end)
+                             :encoding (serial-port-encoding serial-port))
+    (%write serial-port b (1- l))))
 
-(export
- (defun write-serial-port-byte-vector (bytes serial-port &optional (timeout-error-p t) &key (start 0) (end (length bytes)))
-   (declare (ignore timeout-error-p))
-   (unless (%valid-fd-p serial-port)
-     (error "invalid serial port ~S" serial-port))
-   (cffi:with-pointer-to-vector-data (data-sap bytes)
-     (%write serial-port data-sap (- end start)))))
+(defun write-serial-port-byte-vector (bytes serial-port &optional (timeout-error-p t) &key (start 0) (end (length bytes)))
+  (declare (ignore timeout-error-p))
+  (unless (%valid-fd-p serial-port)
+    (error "invalid serial port ~S" serial-port))
+  (cffi:with-pointer-to-vector-data (data-sap bytes)
+    (%write serial-port data-sap (- end start))))
 
 ;;more
 
