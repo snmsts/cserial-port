@@ -87,6 +87,14 @@ The result state is a list giving the state of each line in the same order as th
     (when (= (%read serial-port b 1) 1)
       (cffi:mem-aref b :unsigned-char))))
 
+(defun read-serial-port-bytes (buf serial-port &optional (timeout-error-p t) &key (start 0) (end (length buf)))
+  "Reads a byte from a serial port."
+  (declare (ignorable timeout-error-p))
+  (unless (%valid-fd-p serial-port)
+    (error "invalid serial port ~S" serial-port))
+  (cffi:with-pointer-to-vector-data (buf-sap buf)
+    (%read serial-port buf-sap (- end start))))
+
 (defun read-serial-port-string (string serial-port &optional (timeout-error-p t) &key (start 0) (end nil))
   "Reads a string from a serial port."
   (loop :repeat (- (or end (length string)) start)

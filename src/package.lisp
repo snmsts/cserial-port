@@ -13,6 +13,7 @@
            :get-serial-port-state
            :read-serial-port-char
            :read-serial-port-byte
+           :read-serial-port-bytes
            :read-serial-port-string
            :serial-port-input-available-p
            :set-serial-port-state
