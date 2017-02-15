@@ -92,6 +92,7 @@
 (ctype tcflag-t "tcflag_t")
 (ctype cc-t "cc_t")
 (ctype speed-t "speed_t")
+(ctype pid-t "pid_t")
 
 (cstruct termios "struct termios"
   "The termios structure"

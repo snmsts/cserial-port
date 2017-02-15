@@ -24,7 +24,7 @@
   :depends-on (:trivial-features
                :cffi
                #-windows :cffi-grovel
-               #-windows :iolib)
+               #-windows :osicat)
   :components
   ((:module "src"
             :components
