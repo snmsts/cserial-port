@@ -2,12 +2,15 @@
 
 (defpackage :cserial-port
   (:use :cl)
-  #-windows (:shadowing-import-from :iolib.syscalls :open :close :write :read)
-  #-windows (:import-from :iolib.syscalls :defsyscall :o-rdwr :o-noctty :o-ndelay :getpgrp :pid-t :fcntl :f-setfl)
+  #-windows
+  (:shadowing-import-from :osicat-posix :open :close :write :read)
+  #-windows
+  (:import-from :osicat-posix :o-rdwr :o-noctty :o-ndelay :getpgrp :fcntl :f-setfl)
   (:import-from :cffi
-		:with-foreign-object
-		:with-foreign-slots
-		:mem-aref)
+                :defcfun
+                :with-foreign-object
+                :with-foreign-slots
+                :mem-aref)
   (:export :open-serial-port
            :close-serial-port
            :get-serial-port-state

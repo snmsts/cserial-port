@@ -1,30 +1,30 @@
 (cl:in-package :cserial-port)
 
-(defsyscall (tcgetattr "tcgetattr") :int
+(defcfun ("tcgetattr" tcgetattr) :int
   (fd  :int)
   (termios-p :pointer)) ;;struct termios *
-(defsyscall (tcsetattr "tcsetattr") :int
+(defcfun ("tcsetattr" tcsetattr) :int
   (fd  :int)
   (optional-actions  :int)
   (termios-p :pointer)) ;;struct termios *
-(defsyscall (tcsetpgrp "tcsetpgrp") pid-t
+(defcfun ("tcsetpgrp" tcsetpgrp) pid-t
   (fd  :int)
   (pgrp pid-t))
-(defsyscall (tcsendbreak "tcsendbreak") :int
+(defcfun ("tcsendbreak" tcsendbreak) :int
   (fd  :int)
   (duration :int))
-(defsyscall (tcdrain "tcdrain") :int
+(defcfun ("tcdrain" tcdrain) :int
   (fd  :int))
-(defsyscall (tcflush "tcflush") :int
+(defcfun ("tcflush" tcflush) :int
   (fd  :int)
   (queue_selector :int))
-(defsyscall (tcflow "tcflow") :int
+(defcfun ("tcflow" tcflow) :int
   (fd  :int)
   (action :int))
-(defsyscall (cfsetispeed "cfsetispeed") :int
+(defcfun ("cfsetispeed" cfsetispeed) :int
   (termios-p :pointer) ;;struct termios *
   (speed speed-t))
-(defsyscall (cfsetospeed "cfsetospeed") :int
+(defcfun ("cfsetospeed" cfsetospeed) :int
   (termios-p :pointer) ;;struct termios *
   (speed speed-t))
 
