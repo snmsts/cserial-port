@@ -1,6 +1,7 @@
 (in-package #:cserial-port)
 
-(defclass serial-port-stream (fundamental-input-stream
+(defclass serial-port-stream (trivial-gray-stream-mixin
+                              fundamental-input-stream
                               fundamental-output-stream
                               fundamental-binary-stream)
   ((serial-port :initarg :serial-port
