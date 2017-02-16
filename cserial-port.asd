@@ -22,6 +22,7 @@
   :licence "MIT"
   #-windows :defsystem-depends-on #-windows (:cffi-grovel)
   :depends-on (:trivial-features
+               :trivial-gray-streams
                :cffi
                #-windows :cffi-grovel
                #-windows :osicat)
@@ -37,5 +38,6 @@
              (:file "posix")
              #+windows
              (:file "win32")
-             (:file "main"))))
+             (:file "main")
+             (:file "gray"))))
   :serial t)
