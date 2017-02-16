@@ -1,7 +1,8 @@
 (in-package :common-lisp)
 
 (defpackage :cserial-port
-  (:use :cl)
+  (:use :cl
+        :trivial-gray-streams)
   #-windows
   (:shadowing-import-from :osicat-posix :open :close :write :read)
   #-windows
@@ -22,5 +23,8 @@
            :set-serial-port-state
            :wait-serial-port-state
            :write-serial-port-char
+           :write-serial-port-byte
            :write-serial-port-string
-           :write-serial-port-byte-vector))
+           :write-serial-port-byte-vector
+           :serial-port-stream
+           :make-serial-port-stream))

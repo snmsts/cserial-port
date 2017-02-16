@@ -149,6 +149,12 @@ If timeout is non-nil then the function will return nil after that many seconds 
                              :encoding (serial-port-encoding serial-port))
     (%write serial-port b (1- l))))
 
+(defun write-serial-port-byte (byte serial-port &optional (timeout-error-p t))
+  (let ((data (make-array 1
+                          :element-type '(unsigned-byte 8)
+                          :initial-contents (list byte))))
+    (write-serial-port-byte-vector data serial-port)))
+
 (defun write-serial-port-byte-vector (bytes serial-port &optional (timeout-error-p t) &key (start 0) (end (length bytes)))
   (declare (ignore timeout-error-p))
   (unless (%valid-fd-p serial-port)
