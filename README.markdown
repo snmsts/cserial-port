@@ -1,5 +1,7 @@
 # cserial-port
 
+[![Build Status](https://travis-ci.org/snmsts/cserial-port.svg?branch=master)](https://travis-ci.org/snmsts/cserial-port)
+
 Common Lisp library for interacting with serial ports.
 
 ## Usage
