@@ -1,0 +1,26 @@
+language: common-lisp
+sudo: false
+
+env:
+  global:
+   - PATH=~/.roswell/bin:$PATH
+   - ROSWELL_BRANCH=release
+   - ROSWELL_INSTALL_DIR=$HOME/.roswell
+  matrix:
+    - LISP=sbcl-bin
+    - LISP=ccl-bin
+
+os:
+  - osx
+  - linux
+
+#addons:
+#  apt:
+#    packages:
+#      - libc6-i386
+
+install:
+  - curl -L https://raw.githubusercontent.com/roswell/roswell/$ROSWELL_BRANCH/scripts/install-for-ci.sh | sh
+
+script:
+  - ros -Q -l cserial-port.asd -e '(ql:quickload :cserial-port)' -e '(apropos "serial" :cserial-port)'
