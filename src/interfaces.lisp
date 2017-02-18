@@ -1,30 +1,30 @@
 (cl:in-package :cserial-port)
 
-(defclass serial-port ()
+(defclass serial ()
   ((name :initarg :name
-	 :reader serial-port-name
+	 :reader serial-name
 	 :documentation "Device name")
    (fd :initarg :fd
-       :reader serial-port-fd
+       :reader serial-fd
        :documentation "opend handle")
    (encoding :initarg :encoding
-	     :reader serial-port-encoding
+	     :reader serial-encoding
 	     :documentation "encoding")
    (baud-rate :initarg :baud-rate
-	      :reader serial-port-baud-rate
+	      :reader serial-baud-rate
 	      :documentation "baud-rate")
    (databits :initarg :databits
-	     :reader serial-port-databits
+	     :reader serial-databits
 	     :documentation "Number of databits.")
    (stopbits :initarg :stopbits
-	     :accessor serial-port-stopbits
+	     :accessor serial-stopbits
 	     :documentation "Number of stop-bits")
    (parity :initarg :parity
-	   :accessor serial-port-parity
+	   :accessor serial-parity
 	   :documentation "Parity checking."))
   (:documentation ""))
 
-(defvar *serial-port-class* 'serial-port)
+(defvar *serial-class* 'serial)
 
 (defmacro defgeneric% (fname params &key export doc)
   `(progn

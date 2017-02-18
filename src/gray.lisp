@@ -1,31 +1,31 @@
 (in-package #:cserial-port)
 
-(defclass serial-port-stream (trivial-gray-stream-mixin
-                              fundamental-input-stream
-                              fundamental-output-stream
-                              fundamental-binary-stream)
-  ((serial-port :initarg :serial-port
-                :reader stream-serial-port)))
+(defclass serial-stream (trivial-gray-stream-mixin
+                         fundamental-input-stream
+                         fundamental-output-stream
+                         fundamental-binary-stream)
+  ((serial :initarg :serial
+           :reader stream-serial)))
 
-(defun make-serial-port-stream (serial-port)
-  (make-instance 'serial-port-stream :serial-port serial-port))
+(defun make-serial-stream (serial)
+  (make-instance 'serial-stream :serial serial))
 
-(defmethod stream-element-type ((stream serial-port-stream))
+(defmethod stream-element-type ((stream serial-stream))
   '(unsigned-byte 8))
 
-(defmethod stream-read-byte ((stream serial-port-stream))
-  (read-serial-port-byte (stream-serial-port stream)))
+(defmethod stream-read-byte ((stream serial-stream))
+  (read-serial-byte (stream-serial stream)))
 
-(defmethod stream-read-sequence ((stream serial-port-stream) sequence start end &key)
-  (read-serial-port-byte-vector sequence (stream-serial-port stream) nil :start start :end end))
+(defmethod stream-read-sequence ((stream serial-stream) sequence start end &key)
+  (read-serial-byte-vector sequence (stream-serial stream) nil :start start :end end))
 
-(defmethod stream-write-byte ((stream serial-port-stream) byte)
-  (write-serial-port-byte byte (stream-serial-port stream))
+(defmethod stream-write-byte ((stream serial-stream) byte)
+  (write-serial-byte byte (stream-serial stream))
   byte)
 
-(defmethod stream-write-sequence ((stream serial-port-stream) sequence start end &key)
-  (write-serial-port-byte-vector sequence (stream-serial-port stream) nil :start start :end end)
+(defmethod stream-write-sequence ((stream serial-stream) sequence start end &key)
+  (write-serial-byte-vector sequence (stream-serial stream) nil :start start :end end)
   sequence)
 
-(defmethod stream-finish-output ((stream serial-port-stream))
-  (close-serial-port (stream-serial-port stream)))
+(defmethod stream-finish-output ((stream serial-stream))
+  (close-serial (stream-serial stream)))

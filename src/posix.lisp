@@ -34,15 +34,15 @@
      :do (decf flag (logand flag pattern)))
   flag)
 
-(defclass posix-serial-port (serial-port)
+(defclass posix-serial (serial)
   ((tty :initarg :tty
-	:reader serial-port-tty
+	:reader serial-tty
 	:documentation "tty")))
 
-(defparameter *serial-port-class* 'posix-serial-port)
+(defparameter *serial-class* 'posix-serial)
 
-(defmethod %baud-rate ((s posix-serial-port) &optional baud-rate)
-  (case (or baud-rate (serial-port-baud-rate s))
+(defmethod %baud-rate ((s posix-serial) &optional baud-rate)
+  (case (or baud-rate (serial-baud-rate s))
     ((0) B0)
     ((50) B50)
     ((75) B75)
@@ -62,8 +62,8 @@
     ((115200) B115200)
     (t (error "not supported baud rate ~A [bps]" baud-rate))))
 
-(defmethod %databits ((s posix-serial-port) &optional databits)
-  (let ((val (or databits (serial-port-databits s))))
+(defmethod %databits ((s posix-serial) &optional databits)
+  (let ((val (or databits (serial-databits s))))
     (case val
       ((5) CS5)
       ((6) CS6)
@@ -71,21 +71,21 @@
       ((8) CS8)
       (t (error "unsupported databits ~A" val)))))
 
-(defmethod %parity ((s posix-serial-port) &optional parity)
-  (ecase (or parity (serial-port-parity s))
+(defmethod %parity ((s posix-serial) &optional parity)
+  (ecase (or parity (serial-parity s))
     (:none 0)
     (:even (logior PARENB))
     (:odd  (logior PARENB PARODD))
     (:mark (error "not supported mark"))
     (:space (error "not supported space"))))
 
-(defmethod %valid-fd-p ((s posix-serial-port))
-  (numberp (serial-port-fd s)))
+(defmethod %valid-fd-p ((s posix-serial))
+  (numberp (serial-fd s)))
 
-(defmethod %set-invalid-fd ((s posix-serial-port))
+(defmethod %set-invalid-fd ((s posix-serial))
   (setf (slot-value s 'fd) nil))
 
-(defmethod %default-name ((s (eql 'posix-serial-port)) &optional (number 0))
+(defmethod %default-name ((s (eql 'posix-serial)) &optional (number 0))
   (format nil
 	  (or #+linux  "/dev/ttyS~A"
 	      #+freebsd "/dev/cuaa~A"
@@ -95,14 +95,14 @@
 	      "/dont/know/where~A")
 	  number))
 
-(defmethod %close ((s posix-serial-port))
-  (let ((fd (serial-port-fd s)))
+(defmethod %close ((s posix-serial))
+  (let ((fd (serial-fd s)))
     (fcntl fd f-setfl 0)
     (close fd))
   (%set-invalid-fd s)
   t)
 
-(defmethod %open ((s posix-serial-port)
+(defmethod %open ((s posix-serial)
 		  &key 
 		    name)
   (let* ((ratedef (%baud-rate s))
@@ -130,14 +130,14 @@
 	(setf (mem-aref cc 'cc-t VMIN) 1))
       (unless (zerop (tcsetattr fd TCSANOW tty))
 	(%close fd)
-	(error "unable to setup serial-port"))
+	(error "unable to setup serial port"))
       s)))
 
-(defmethod %write ((s posix-serial-port) buffer seq-size)
+(defmethod %write ((s posix-serial) buffer seq-size)
   (with-slots (fd) s
     ;;TODO: do something if return value is -1.
     (write fd buffer seq-size)))
 
-(defmethod %read ((s posix-serial-port) buf count)
+(defmethod %read ((s posix-serial) buf count)
   (with-slots (fd) s
     (read fd buf count)))

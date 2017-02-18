@@ -279,13 +279,13 @@
 		    ,@error-form)))
 
 ;;
-(defparameter *serial-port-class* 'win32-serial-port)
+(defparameter *serial-class* 'win32-serial)
 
-(defclass win32-serial-port (serial-port)
+(defclass win32-serial (serial)
   ())
 
-(defmethod %baud-rate ((s win32-serial-port) &optional baud-rate)
-  (case (or baud-rate (serial-port-baud-rate s))
+(defmethod %baud-rate ((s win32-serial) &optional baud-rate)
+  (case (or baud-rate (serial-baud-rate s))
     ((110) +CBR_110+)
     ((300) +CBR_300+)
     ((600) +CBR_600+)
@@ -303,48 +303,48 @@
     ((256000) +CBR_256000+)
     (t (error "not supported baud rate ~A [bps]" baud-rate))))
 
-(defmethod %databits ((s win32-serial-port) &optional databits)
-  (let ((val (or databits (serial-port-databits s))))
+(defmethod %databits ((s win32-serial) &optional databits)
+  (let ((val (or databits (serial-databits s))))
     (if (<= 4 val 8)
 	val
 	(error "unsupported databits ~A" val))))
 
-(defmethod %stopbits ((s win32-serial-port) &optional stopbits)
-  (let ((stopbits (or stopbits (serial-port-stopbits s))))
+(defmethod %stopbits ((s win32-serial) &optional stopbits)
+  (let ((stopbits (or stopbits (serial-stopbits s))))
     (cond
       ((= stopbits 1) +ONESTOPBIT+)
       ((= stopbits 1.5) +ONE5STOPBITS+)
       ((= stopbits 2) +TWOSTOPBITS+)
       (t (error "unsupported stopbits")))))
 
-(defmethod %parity ((s win32-serial-port) &optional parity)
-  (ecase (or parity (serial-port-parity s))
+(defmethod %parity ((s win32-serial) &optional parity)
+  (ecase (or parity (serial-parity s))
     (:none +NOPARITY+)
     (:even +EVENPARITY+)
     (:odd +ODDPARITY+)
     (:mark +MARKPARITY+)
     (:space +SPACEPARITY+)))
 
-(defmethod %valid-fd-p ((s win32-serial-port))
-  (let ((fd (serial-port-fd s)))
+(defmethod %valid-fd-p ((s win32-serial))
+  (let ((fd (serial-fd s)))
     (and (cffi:pointerp fd)
 	 (valid-pointer-p fd)
 	 t)))
 
-(defmethod %set-invalid-fd ((s win32-serial-port))
+(defmethod %set-invalid-fd ((s win32-serial))
   (setf (slot-value s 'fd) (cffi:make-pointer #xFFFFFFFF)))
 
-(defmethod %default-name ((s (eql 'win32-serial-port)) &optional (number 1))
+(defmethod %default-name ((s (eql 'win32-serial)) &optional (number 1))
   (format nil (if (> number 9)
 		  "\\\\.\\COM~A"
 		  "COM~A") number))
 
-(defmethod %close ((s win32-serial-port))
-  (win32-close-handle (serial-port-fd s))
+(defmethod %close ((s win32-serial))
+  (win32-close-handle (serial-fd s))
   (%set-invalid-fd s)
   t)
 
-(defmethod %open ((s win32-serial-port)
+(defmethod %open ((s win32-serial)
 		  &key
 		    name)
   (let* ((null (cffi:null-pointer))
@@ -370,7 +370,7 @@
 	(error "SetCommState failed"))))
   s)
 
-(defmethod %write ((s win32-serial-port) buffer seq-size)
+(defmethod %write ((s win32-serial) buffer seq-size)
   (with-slots (fd) s
     (cffi:with-foreign-object (writtenbytes 'word)
       (win32-confirm 
@@ -378,7 +378,7 @@
        (cffi:mem-ref writtenbytes 'word)
        (error "could not write to device")))))
 
-(defmethod %read ((s win32-serial-port) buf count)
+(defmethod %read ((s win32-serial) buf count)
   (with-slots (fd) s
     (cffi:with-foreign-object (readbytes 'word)
       (win32-confirm 

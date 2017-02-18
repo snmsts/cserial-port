@@ -12,19 +12,20 @@
                 :with-foreign-object
                 :with-foreign-slots
                 :mem-aref)
-  (:export :open-serial-port
-           :close-serial-port
-           :get-serial-port-state
-           :read-serial-port-char
-           :read-serial-port-byte
-           :read-serial-port-byte-vector
-           :read-serial-port-string
-           :serial-port-input-available-p
-           :set-serial-port-state
-           :wait-serial-port-state
-           :write-serial-port-char
-           :write-serial-port-byte
-           :write-serial-port-string
-           :write-serial-port-byte-vector
-           :serial-port-stream
-           :make-serial-port-stream))
+  (:export :open-serial
+           :close-serial
+           :get-serial-state
+           :read-serial-char
+           :read-serial-byte
+           :read-serial-byte-vector
+           :read-serial-string
+           :serial-input-available-p
+           :set-serial-state
+           :wait-serial-state
+           :write-serial-char
+           :write-serial-byte
+           :write-serial-string
+           :write-serial-byte-vector
+           :serial-stream
+           :make-serial-stream
+           :with-serial))
