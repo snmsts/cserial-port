@@ -11,7 +11,7 @@
 
 ;;interfaces borrowed from lisp works
 (defun open-serial
-    (&optional name 
+    (&optional name
      &rest args
      &key
      (baud-rate *default-baud-rate*)
@@ -34,8 +34,8 @@
                (if (numberp name) (%default-name *serial-class* name) name)))
   (%open (apply #'make-instance *serial-class*
                 :baud-rate baud-rate
-                :databits data-bits
-                :stopbits stop-bits
+                :data-bits data-bits
+                :stop-bits stop-bits
                 :parity parity
                 :encoding encoding
                 args)
@@ -58,7 +58,7 @@ The result state is a list giving the state of each line in the same order as th
 
 (defun read-serial-char (serial &optional (timeout-error-p t) (timeout-char nil))
   "Reads a character from a serial port."
-  (declare (ignorable timeout-char timeout-error-p)) ;;for now 
+  (declare (ignorable timeout-char timeout-error-p)) ;;for now
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
   (cffi:with-foreign-object (b :unsigned-char 1)
@@ -69,8 +69,8 @@ The result state is a list giving the state of each line in the same order as th
       (loop :do
          (when (= (%read serial b 1) 1)
            (vector-push-extend (cffi:mem-aref b :unsigned-char) v)
-           (let ((res (ignore-errors (babel:octets-to-string 
-                                      v 
+           (let ((res (ignore-errors (babel:octets-to-string
+                                      v
                                       :errorp t
                                       :encoding (serial-encoding serial)))))
              (when res
@@ -110,7 +110,7 @@ The result state is a list giving the state of each line in the same order as th
   nil)
 
 (defun serial-input-available-p (serial)
-  "Checks whether a character is available on a serial port."   
+  "Checks whether a character is available on a serial port."
   (%input-available-p serial))
 
 (defun set-serial-state (serial &key dtr rts break)
@@ -166,8 +166,6 @@ If timeout is non-nil then the function will return nil after that many seconds 
 
 (defmacro with-serial ((serial name &rest params) &body body)
   `(let ((,serial (open-serial ,name ,@params)))
-     (unwind-protect 
+     (unwind-protect
 	  (progn ,@body)
        (close-serial ,serial))))
-
-

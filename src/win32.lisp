@@ -303,19 +303,19 @@
     ((256000) +CBR_256000+)
     (t (error "not supported baud rate ~A [bps]" baud-rate))))
 
-(defmethod %databits ((s win32-serial) &optional databits)
-  (let ((val (or databits (serial-databits s))))
+(defmethod %data-bits ((s win32-serial) &optional data-bits)
+  (let ((val (or data-bits (serial-data-bits s))))
     (if (<= 4 val 8)
 	val
-	(error "unsupported databits ~A" val))))
+	(error "unsupported data-bits ~A" val))))
 
-(defmethod %stopbits ((s win32-serial) &optional stopbits)
-  (let ((stopbits (or stopbits (serial-stopbits s))))
+(defmethod %stop-bits ((s win32-serial) &optional stop-bits)
+  (let ((stop-bits (or stop-bits (serial-stop-bits s))))
     (cond
-      ((= stopbits 1) +ONESTOPBIT+)
-      ((= stopbits 1.5) +ONE5STOPBITS+)
-      ((= stopbits 2) +TWOSTOPBITS+)
-      (t (error "unsupported stopbits")))))
+      ((= stop-bits 1) +ONESTOPBIT+)
+      ((= stop-bits 1.5) +ONE5STOPBITS+)
+      ((= stop-bits 2) +TWOSTOPBITS+)
+      (t (error "unsupported stop-bits")))))
 
 (defmethod %parity ((s win32-serial) &optional parity)
   (ecase (or parity (serial-parity s))
@@ -359,11 +359,11 @@
 	(setf DCBlength (cffi:foreign-type-size '(:struct dcb))))
       (win32-onerror (win32-get-comm-state fd ptr)
 	(error "GetCommState failed"))
-      (cffi:with-foreign-slots ((baudrate bytesize parity stopbits dcbflags)
+      (cffi:with-foreign-slots ((baudrate bytesize parity stop-bits dcbflags)
 				ptr (:struct dcb))
 	(setf baudrate (%baud-rate s))
-	(setf bytesize (%databits s))
-	(setf stopbits (%stopbits s))
+	(setf bytesize (%data-bits s))
+	(setf stop-bits (%stop-bits s))
 	(setf parity (%parity s))
 	(setf dcbflags (cffi:foreign-bitfield-value 'dcb-flags '(fbinary))))
       (win32-onerror (win32-set-comm-state fd ptr)
@@ -373,7 +373,7 @@
 (defmethod %write ((s win32-serial) buffer seq-size)
   (with-slots (fd) s
     (cffi:with-foreign-object (writtenbytes 'word)
-      (win32-confirm 
+      (win32-confirm
        (win32-write-file fd buffer seq-size writtenbytes (cffi:null-pointer))
        (cffi:mem-ref writtenbytes 'word)
        (error "could not write to device")))))
@@ -381,7 +381,7 @@
 (defmethod %read ((s win32-serial) buf count)
   (with-slots (fd) s
     (cffi:with-foreign-object (readbytes 'word)
-      (win32-confirm 
+      (win32-confirm
        (win32-read-file fd buf count readbytes (cffi:null-pointer))
        (cffi:mem-ref readbytes 'word)
        (error "could not read from device")))))

@@ -62,14 +62,14 @@
     ((115200) B115200)
     (t (error "not supported baud rate ~A [bps]" baud-rate))))
 
-(defmethod %databits ((s posix-serial) &optional databits)
-  (let ((val (or databits (serial-databits s))))
+(defmethod %data-bits ((s posix-serial) &optional data-bits)
+  (let ((val (or data-bits (serial-data-bits s))))
     (case val
       ((5) CS5)
       ((6) CS6)
       ((7) CS7)
       ((8) CS8)
-      (t (error "unsupported databits ~A" val)))))
+      (t (error "unsupported data-bits ~A" val)))))
 
 (defmethod %parity ((s posix-serial) &optional parity)
   (ecase (or parity (serial-parity s))
@@ -103,7 +103,7 @@
   t)
 
 (defmethod %open ((s posix-serial)
-		  &key 
+		  &key
 		    name)
   (let* ((ratedef (%baud-rate s))
 	 (fd (open name (logior o-rdwr o-noctty o-ndelay))))
@@ -111,18 +111,18 @@
       (error "~A open error!!" name))
     (setf (slot-value s 'fd) fd)
     (with-foreign-object (tty '(:struct termios))
-      (unless (and 
+      (unless (and
 	       (zerop (tcgetattr fd tty))
 	       (zerop (cfsetispeed tty ratedef))
 	       (zerop (cfsetospeed tty ratedef)))
 	(%close fd)
 	(error "~A setspeed error!!" name))
-      
+
       (with-foreign-slots ((lflag iflag cflag oflag cc) tty (:struct termios))
 	(setf lflag (off lflag ICANON ECHO ECHONL IEXTEN ISIG))
 	(setf iflag (off iflag BRKINT ICRNL INPCK ISTRIP IXON))
 	(setf cflag (logior (off cflag PARENB CSTOPB CSIZE)
-			    (%databits s)
+			    (%data-bits s)
 			    (%parity s)
 			    HUPCL CLOCAL))
 	(setf oflag (off oflag OPOST))

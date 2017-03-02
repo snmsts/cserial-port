@@ -13,11 +13,11 @@
    (baud-rate :initarg :baud-rate
 	      :reader serial-baud-rate
 	      :documentation "baud-rate")
-   (databits :initarg :databits
-	     :reader serial-databits
-	     :documentation "Number of databits.")
-   (stopbits :initarg :stopbits
-	     :accessor serial-stopbits
+   (data-bits :initarg :data-bits
+              :reader serial-data-bits
+              :documentation "Number of data-bits.")
+   (stop-bits :initarg :stop-bits
+              :accessor serial-stop-bits
 	     :documentation "Number of stop-bits")
    (parity :initarg :parity
 	   :accessor serial-parity
@@ -38,8 +38,8 @@
 
 ;;convert to native form.
 (defgeneric% %baud-rate (class &optional baud-rate))
-(defgeneric% %databits (class &optional databits))
-(defgeneric% %stopbits (class &optional stopbits))
+(defgeneric% %data-bits (class &optional data-bits))
+(defgeneric% %stop-bits (class &optional stop-bits))
 (defgeneric% %parity (class &optional parity))
 
 (defgeneric% %valid-fd-p (class))
