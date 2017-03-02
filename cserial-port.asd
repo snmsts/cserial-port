@@ -18,7 +18,7 @@
 (asdf:defsystem :cserial-port
   :description "library for serial communication inspired by lispworks' serial-port"
   :author "Masatoshi SANO <snmsts@gmail.com>"
-  :version "0.0.2"
+  :version "0.0.3"
   :licence "MIT"
   #-windows :defsystem-depends-on #-windows (:cffi-grovel)
   :depends-on (:trivial-features
