@@ -106,7 +106,7 @@
 		  &key
 		    name)
   (let* ((ratedef (%baud-rate s))
-	 (fd (open name (logior o-rdwr o-noctty o-ndelay))))
+	 (fd (open name (logior o-rdwr o-noctty))))
     (when (= -1 fd)
       (error "~A open error!!" name))
     (setf (slot-value s 'fd) fd)
