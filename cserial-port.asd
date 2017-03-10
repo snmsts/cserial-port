@@ -23,6 +23,7 @@
   #-windows :defsystem-depends-on #-windows (:cffi-grovel)
   :depends-on (:trivial-features
                :trivial-gray-streams
+               :trivial-timeout
                :cffi
                #-windows :cffi-grovel
                #-windows :osicat)

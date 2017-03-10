@@ -56,58 +56,51 @@ The result state is a list giving the state of each line in the same order as th
   (error "not yet implemented")
   nil)
 
-(defun read-serial-char (serial &optional (timeout-error-p t) (timeout-char nil))
+(defun read-serial-char (serial &key timeout)
   "Reads a character from a serial port."
-  (declare (ignorable timeout-char timeout-error-p)) ;;for now
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
-  (cffi:with-foreign-object (b :unsigned-char 1)
-    (let ((v (make-array
-              20
-              :fill-pointer 0
-              :element-type '(unsigned-byte 8))))
-      (loop :do
-         (when (= (%read serial b 1) 1)
-           (vector-push-extend (cffi:mem-aref b :unsigned-char) v)
-           (let ((res (ignore-errors (babel:octets-to-string
-                                      v
-                                      :errorp t
-                                      :encoding (serial-encoding serial)))))
-             (when res
-               (return-from read-serial-char
-                 (aref res 0))))))
-      nil)))
+  (with-timeout (timeout)
+    (cffi:with-foreign-object (b :unsigned-char 1)
+      (let ((v (make-array
+                20
+                :fill-pointer 0
+                :element-type '(unsigned-byte 8))))
+        (loop :do
+          (when (= (%read serial b 1) 1)
+            (vector-push-extend (cffi:mem-aref b :unsigned-char) v)
+            (let ((res (ignore-errors (babel:octets-to-string
+                                       v
+                                       :errorp t
+                                       :encoding (serial-encoding serial)))))
+              (when res
+                (return (aref res 0))))))))))
 
-(defun read-serial-byte (serial &optional (timeout-error-p t))
+(defun read-serial-byte (serial &key timeout)
   "Reads a byte from a serial port."
-  (declare (ignorable timeout-error-p))
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
-  (cffi:with-foreign-object (b :unsigned-char 1)
-    (when (= (%read serial b 1) 1)
-      (cffi:mem-aref b :unsigned-char))))
+  (with-timeout (timeout)
+    (cffi:with-foreign-object (b :unsigned-char 1)
+      (when (= (%read serial b 1) 1)
+        (cffi:mem-aref b :unsigned-char)))))
 
-(defun read-serial-byte-vector (buf serial &optional (timeout-error-p t) &key (start 0) (end (length buf)))
+(defun read-serial-byte-vector (buf serial &key timeout (start 0) (end (length buf)))
   "Reads a byte from a serial port."
-  (declare (ignorable timeout-error-p))
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
-  (cffi:with-pointer-to-vector-data (buf-sap buf)
-    (%read serial buf-sap (- end start))))
+  (with-timeout (timeout)
+    (cffi:with-pointer-to-vector-data (buf-sap buf)
+      (%read serial buf-sap (- end start)))))
 
-(defun read-serial-string (string serial &optional (timeout-error-p t) &key (start 0) (end nil))
+(defun read-serial-string (string serial &key timeout (start 0) (end nil))
   "Reads a string from a serial port."
   (loop :repeat (- (or end (length string)) start)
      :for i :from start
      :for nread :from 1
      :for c := (read-serial-char serial nil nil)
-     :do (if c
-             (setf (aref string i) c)
-             (if timeout-error-p
-                 (error "timeout")
-                 (return-from read-serial-string (1- nread))))
-     :finally (return-from read-serial-string nread))
-  nil)
+     :do (setf (aref string i) c)
+     :finally (return nread)))
 
 (defun serial-input-available-p (serial)
   "Checks whether a character is available on a serial port."
@@ -135,32 +128,32 @@ If timeout is non-nil then the function will return nil after that many seconds 
   (error "not yet implemented")
   nil)
 
-(defun write-serial-char (char serial &optional (timeout-error-p t))
+(defun write-serial-char (char serial &key timeout)
   "Writes a character to a serial port."
-  (write-serial-string (string char) serial timeout-error-p)
+  (write-serial-string (string char) serial :timeout timeout)
   char)
 
-(defun write-serial-string (string serial &optional (timeout-error-p t) &key (start 0) (end nil))
+(defun write-serial-string (string serial &key timeout (start 0) (end nil))
   "Writes a string to a serial port."
-  (declare (ignorable timeout-error-p))
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
-  (cffi:with-foreign-string ((b l) (subseq string start end)
-                             :encoding (serial-encoding serial))
-    (%write serial b (1- l))))
+  (with-timeout (timeout)
+    (cffi:with-foreign-string ((b l) (subseq string start end)
+                               :encoding (serial-encoding serial))
+      (%write serial b (1- l)))))
 
-(defun write-serial-byte (byte serial &optional (timeout-error-p t))
+(defun write-serial-byte (byte serial &key timeout)
   (let ((data (make-array 1
                           :element-type '(unsigned-byte 8)
                           :initial-contents (list byte))))
-    (write-serial-byte-vector data serial)))
+    (write-serial-byte-vector data serial :timeout timeout)))
 
-(defun write-serial-byte-vector (bytes serial &optional (timeout-error-p t) &key (start 0) (end (length bytes)))
-  (declare (ignore timeout-error-p))
+(defun write-serial-byte-vector (bytes serial &key timeout (start 0) (end (length bytes)))
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
-  (cffi:with-pointer-to-vector-data (data-sap bytes)
-    (%write serial data-sap (- end start))))
+  (with-timeout (timeout)
+    (cffi:with-pointer-to-vector-data (data-sap bytes)
+      (%write serial data-sap (- end start)))))
 
 ;;more
 
