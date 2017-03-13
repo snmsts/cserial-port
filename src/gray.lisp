@@ -17,14 +17,14 @@
   (read-serial-byte (stream-serial stream)))
 
 (defmethod stream-read-sequence ((stream serial-stream) sequence start end &key)
-  (read-serial-byte-vector sequence (stream-serial stream) nil :start start :end end))
+  (read-serial-byte-vector sequence (stream-serial stream) :start start :end end))
 
 (defmethod stream-write-byte ((stream serial-stream) byte)
   (write-serial-byte byte (stream-serial stream))
   byte)
 
 (defmethod stream-write-sequence ((stream serial-stream) sequence start end &key)
-  (write-serial-byte-vector sequence (stream-serial stream) nil :start start :end end)
+  (write-serial-byte-vector sequence (stream-serial stream) :start start :end end)
   sequence)
 
 (defmethod stream-finish-output ((stream serial-stream))
