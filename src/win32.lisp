@@ -75,6 +75,9 @@
 (defconstant +SETDTR+                5)
 (defconstant +CLRDTR+                6)
 
+(defconstant +ERROR_IO_PENDING+ 997)
+(defconstant +WAIT_OBJECT_0+ 0)
+(defconstant +WAIT_TIMEOUT+  258)
 (defconstant +INFINITE+ #xFFFFFFFF)
 
 (defconstant +PURGE_TXCLEAR+ 4)
@@ -184,15 +187,15 @@
   (lperrors lpdword)
   (lpstat lpcomstat))
 
-(cffi:defcfun (win32-wait-for-single-object "WaitForSingleObject" :convention :stdcall) bool
+(cffi:defcfun (win32-wait-for-single-object "WaitForSingleObject" :convention :stdcall) dword
   (hHandle handle)
   (dwMilliseconds dword))
 
-(cffi:defcfun (win32-get-overlapped-result "GetOverlappedResult" :convention :stdcall) bool
+(cffi:defcfun (win32-get-overlapped-result "GetOverlappedResult" :convention :stdcall) :boolean
   (hFile handle)
   (lpOverlapped lpoverlapped)
   (lpNumberOfBytesTransferred lpword)
-  (bWait bool))
+  (bWait :boolean))
 
 (cffi:defcfun (win32-purge-comm "PurgeComm" :convention :stdcall) bool
   (hFile handle)
@@ -200,8 +203,8 @@
 
 (cffi:defcfun (win32-create-event "CreateEventA" :convention :stdcall) handle
   (lpEventAttributes lpsecurity-attributes)
-  (bManualReset bool)
-  (bInitialState bool)
+  (bManualReset :boolean)
+  (bInitialState :boolean)
   (lpName lpctstr))
 
 (cffi:defcfun (win32-get-comm-timeouts "GetCommTimeouts" :convention :stdcall) bool
@@ -348,8 +351,9 @@
                   &key
                     name)
   (let* ((null (cffi:null-pointer))
-         (fd (win32-create-file name (logior +GENERIC_READ+ +GENERIC_WRITE+)
-                                0 null +OPEN_EXISTING+ 0 null)))
+         (fd (win32-create-file name
+                                (logior +GENERIC_READ+ +GENERIC_WRITE+)
+                                0 null +OPEN_EXISTING+ +FILE_FLAG_OVERLAPPED+ null)))
     (unless (valid-pointer-p fd)
       (error "Create file invalid pointer"))
     (setf (slot-value s 'fd) fd)
@@ -370,18 +374,73 @@
                      (error "SetCommState failed"))))
   s)
 
-(defmethod %write ((s win32-serial) buffer seq-size)
-  (with-slots (fd) s
-    (cffi:with-foreign-object (writtenbytes 'word)
-      (win32-confirm
-       (win32-write-file fd buffer seq-size writtenbytes (cffi:null-pointer))
-       (cffi:mem-ref writtenbytes 'word)
-       (error "could not write to device")))))
+(defmethod %write ((s win32-serial) buffer write-size timeout-ms)
+  (cffi:with-foreign-object (poverlapped '(:struct overlapped))
+    (win32-memset poverlapped 0 (cffi:foreign-type-size '(:struct overlapped)))
+    (let* ((null (cffi:null-pointer))
+           (evt (win32-create-event null t nil null)))
+      (unless (valid-pointer-p evt)
+        (error "Create event failed"))
+      (unwind-protect
+           (progn
+             (cffi:with-foreign-slots ((hEvent) poverlapped (:struct overlapped))
+               (setf hEvent evt))
+             (with-slots (fd) s
+               (cffi:with-foreign-object (writtenbytes 'word)
+                 (let ((rt (win32-write-file fd buffer write-size writtenbytes poverlapped)))
+                   (if (zerop rt)
+                       (let ((errno (win32-get-last-error)))
+                         (if (= errno +ERROR_IO_PENDING+)
+                             (let ((rt (cffi:with-foreign-slots ((hEvent) poverlapped (:struct overlapped))
+                                         (win32-wait-for-single-object hEvent timeout-ms))))
+                               (case rt
+                                 (#.+WAIT_OBJECT_0+
+                                  (let ((rt (win32-get-overlapped-result fd poverlapped writtenbytes nil)))
+                                    (if (null rt)
+                                        (error "Error on GetOverlappedResult (~a)" (win32-get-last-error))
+                                        (cffi:mem-ref writtenbytes 'word))))
+                                 (#.+WAIT_TIMEOUT+ nil)
+                                 (otherwise
+                                  (error "Error on WaitForSingleObject (~a)" rt))))
+                             (error "Error on read (~a)" errno)))
+                       (cffi:mem-ref writtenbytes 'word))))))
+        (progn
+          (win32-reset-event evt)
+          (win32-close-handle evt))))))
 
-(defmethod %read ((s win32-serial) buf count)
-  (with-slots (fd) s
-    (cffi:with-foreign-object (readbytes 'word)
-      (win32-confirm
-       (win32-read-file fd buf count readbytes (cffi:null-pointer))
-       (cffi:mem-ref readbytes 'word)
-       (error "could not read from device")))))
+(defmethod %read ((s win32-serial) buffer buffer-size timeout-ms)
+  (cffi:with-foreign-object (poverlapped '(:struct overlapped))
+    (win32-memset poverlapped 0 (cffi:foreign-type-size '(:struct overlapped)))
+    (let* ((null (cffi:null-pointer))
+           (evt (win32-create-event null t nil null)))
+      (unless (valid-pointer-p evt)
+        (error "Create event failed"))
+      (unwind-protect
+           (progn
+             (cffi:with-foreign-slots ((hEvent) poverlapped (:struct overlapped))
+               (setf hEvent evt))
+             (with-slots (fd) s
+               (cffi:with-foreign-object (readbytes 'word)
+                 (let ((rt (win32-read-file fd buffer buffer-size readbytes poverlapped)))
+                   (if (zerop rt)
+                       (let ((errno (win32-get-last-error)))
+                         (if (= errno +ERROR_IO_PENDING+)
+                             (let ((rt (cffi:with-foreign-slots ((hEvent) poverlapped (:struct overlapped))
+                                         (win32-wait-for-single-object hEvent timeout-ms))))
+                               (case rt
+                                 (#.+WAIT_OBJECT_0+
+                                  (let ((rt (win32-get-overlapped-result fd poverlapped readbytes nil)))
+                                    (if (null rt)
+                                        (error "Error on GetOverlappedResult (~a)" (win32-get-last-error))
+                                        (cffi:mem-ref readbytes 'word))))
+                                 (#.+WAIT_TIMEOUT+ nil)
+                                 (otherwise
+                                  (error "Error on WaitForSingleObject (~a)" rt))))
+                             (error "Error on read (~a)" errno)))
+                       (cffi:mem-ref readbytes 'word))))))
+        (progn
+          (win32-reset-event evt)
+          (win32-close-handle evt))))))
+
+
+

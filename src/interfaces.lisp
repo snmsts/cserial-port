@@ -50,5 +50,5 @@
 (defgeneric% %close (class))
 (defgeneric% %open (class &key))
 
-(defgeneric% %write (class buf seq-size))
-(defgeneric% %read  (class buf seq-size))
+(defgeneric% %write (class buffer write-size timeout-ms))
+(defgeneric% %read  (class buffer buffer-size timeout-ms))
