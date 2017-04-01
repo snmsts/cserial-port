@@ -83,7 +83,7 @@
 (defconstant +PURGE_RXABORT+ 2)
 
 (cffi:load-foreign-library "kernel32")
-  
+
 (cffi:defctype dword :uint32)
 (cffi:defctype word :uint16)
 (cffi:defctype bool :uchar)
@@ -106,7 +106,7 @@
   fAbortOnError; /* Abort all reads and writes on Error */
 )
 
-(cffi:defcstruct dcb 
+(cffi:defcstruct dcb
   (DCBlength dword);      /* sizeof(DCB)                     */
   (BaudRate dword);       /* Baudrate at which running       */
   (dcbflags dword);
@@ -142,8 +142,8 @@
   (cbInQue dword)
   (cbOutQue dword))
 
-(cffi:defctype pvoid (:pointer :void)) 
-(cffi:defctype lpvoid (:pointer :void)) 
+(cffi:defctype pvoid (:pointer :void))
+(cffi:defctype lpvoid (:pointer :void))
 (cffi:defctype dword-ptr (:pointer dword))
 (cffi:defctype ulong-ptr dword-ptr)
 (cffi:defctype handle pvoid)
@@ -193,7 +193,7 @@
   (lpOverlapped lpoverlapped)
   (lpNumberOfBytesTransferred lpword)
   (bWait bool))
-  
+
 (cffi:defcfun (win32-purge-comm "PurgeComm" :convention :stdcall) bool
   (hFile handle)
   (flags dword))
@@ -209,12 +209,12 @@
   (timeouts (:pointer commtimeouts)))
 
 (cffi:defcfun (win32-create-file "CreateFileA" :convention :stdcall) handle
-  (filename :string)  
-  (desired-access :uint32)  
-  (share-mode :uint32) 
+  (filename :string)
+  (desired-access :uint32)
+  (share-mode :uint32)
   (security-attribute :pointer)
   (creation-disposition :uint32)
-  (flags-and-attributes :uint32) 
+  (flags-and-attributes :uint32)
   (template-file :pointer))
 
 (cffi:defcfun (win32-setup-comm "SetupComm" :convention :stdcall) bool
@@ -242,7 +242,7 @@
   (dest :pointer)
   (fill :int)
   (size :uint))
-  
+
 (cffi:defcfun (win32-close-handle "CloseHandle" :convention :stdcall) bool
   (object :pointer))
 
