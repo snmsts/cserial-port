@@ -358,6 +358,7 @@
       (cffi:with-foreign-slots ((DCBlength) ptr (:struct dcb))
         (setf DCBlength (cffi:foreign-type-size '(:struct dcb))))
       (win32-onerror (win32-get-comm-state fd ptr)
+                     (win32-close-handle fd)
                      (error "GetCommState failed"))
       (cffi:with-foreign-slots ((baudrate bytesize parity stopbits dcbflags)
                                 ptr (:struct dcb))
@@ -367,6 +368,7 @@
         (setf parity (%parity s))
         (setf dcbflags (cffi:foreign-bitfield-value 'dcb-flags '(fbinary))))
       (win32-onerror (win32-set-comm-state fd ptr)
+                     (win32-close-handle fd)
                      (error "SetCommState failed"))))
   s)
 
