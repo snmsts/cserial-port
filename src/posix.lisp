@@ -133,11 +133,13 @@
 	(error "unable to setup serial port"))
       s)))
 
-(defmethod %write ((s posix-serial) buffer seq-size)
+(defmethod %write ((s posix-serial) buffer write-size timeout-ms)
+  (declare (ignorable timeout-ms)) ;; not supported yet
   (with-slots (fd) s
     ;;TODO: do something if return value is -1.
-    (write fd buffer seq-size)))
+    (write fd buffer write-size)))
 
-(defmethod %read ((s posix-serial) buf count)
+(defmethod %read ((s posix-serial) buffer buffer-size timeout-ms)
+  (declare (ignorable timeout-ms)) ;; not supported yet
   (with-slots (fd) s
-    (read fd buf count)))
+    (read fd buffer buffer-size)))

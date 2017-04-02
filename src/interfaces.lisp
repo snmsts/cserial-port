@@ -26,6 +26,12 @@
 
 (defvar *serial-class* 'serial)
 
+(define-condition timeout-error (error) ()
+  (:report (lambda (c s)
+             (declare (ignore c))
+             (format s "Process timeout")))
+  (:documentation "An error signaled when the duration specified in the [with-timeout][] is exceeded."))
+
 (defmacro defgeneric% (fname params &key export doc)
   `(progn
      (defgeneric ,fname ,params
@@ -50,5 +56,5 @@
 (defgeneric% %close (class))
 (defgeneric% %open (class &key))
 
-(defgeneric% %write (class buf seq-size))
-(defgeneric% %read  (class buf seq-size))
+(defgeneric% %write (class buffer write-size timeout-ms))
+(defgeneric% %read  (class buffer buffer-size timeout-ms))
