@@ -162,5 +162,5 @@ If timeout is non-nil then the function will return nil after that many seconds 
        (close-serial ,serial))))
 
 (defmacro with-timeout ((ms) &body body)
-  `(let ((*default-timeout* ,ms))
+  `(let ((*default-timeout-ms* ,ms))
      ,@body))
