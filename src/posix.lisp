@@ -134,12 +134,12 @@
       s)))
 
 (defmethod %write ((s posix-serial) buffer write-size timeout-ms)
-  (declare (ignoreable timeout-ms)) ;; not supported yet
+  (declare (ignorable timeout-ms)) ;; not supported yet
   (with-slots (fd) s
     ;;TODO: do something if return value is -1.
     (write fd buffer write-size)))
 
 (defmethod %read ((s posix-serial) buffer buffer-size timeout-ms)
-  (declare (ignoreable timeout-ms)) ;; not supported yet
+  (declare (ignorable timeout-ms)) ;; not supported yet
   (with-slots (fd) s
     (read fd buffer buffer-size)))
