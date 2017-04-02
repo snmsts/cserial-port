@@ -399,7 +399,7 @@
                                     (if (null rt)
                                         (error "Error on GetOverlappedResult (~a)" (win32-get-last-error))
                                         (cffi:mem-ref writtenbytes 'word))))
-                                 (#.+WAIT_TIMEOUT+ nil)
+                                 (#.+WAIT_TIMEOUT+ (error 'timeout-error))
                                  (otherwise
                                   (error "Error on WaitForSingleObject (~a)" rt))))
                              (error "Error on read (~a)" errno)))
@@ -433,7 +433,7 @@
                                     (if (null rt)
                                         (error "Error on GetOverlappedResult (~a)" (win32-get-last-error))
                                         (cffi:mem-ref readbytes 'word))))
-                                 (#.+WAIT_TIMEOUT+ nil)
+                                 (#.+WAIT_TIMEOUT+ (error 'timeout-error))
                                  (otherwise
                                   (error "Error on WaitForSingleObject (~a)" rt))))
                              (error "Error on read (~a)" errno)))

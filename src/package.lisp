@@ -28,4 +28,5 @@
            :write-serial-byte-vector
            :serial-stream
            :make-serial-stream
-           :with-serial))
+           :with-serial
+           :timeout-error))
