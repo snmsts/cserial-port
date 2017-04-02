@@ -392,7 +392,7 @@
                        (let ((errno (win32-get-last-error)))
                          (if (= errno +ERROR_IO_PENDING+)
                              (let ((rt (cffi:with-foreign-slots ((hEvent) poverlapped (:struct overlapped))
-                                         (win32-wait-for-single-object hEvent timeout-ms))))
+                                         (win32-wait-for-single-object hEvent (or timeout-ms +INFINITE+)))))
                                (case rt
                                  (#.+WAIT_OBJECT_0+
                                   (let ((rt (win32-get-overlapped-result fd poverlapped writtenbytes nil)))
@@ -426,7 +426,7 @@
                        (let ((errno (win32-get-last-error)))
                          (if (= errno +ERROR_IO_PENDING+)
                              (let ((rt (cffi:with-foreign-slots ((hEvent) poverlapped (:struct overlapped))
-                                         (win32-wait-for-single-object hEvent timeout-ms))))
+                                         (win32-wait-for-single-object hEvent (or timeout-ms +INFINITE+)))))
                                (case rt
                                  (#.+WAIT_OBJECT_0+
                                   (let ((rt (win32-get-overlapped-result fd poverlapped readbytes nil)))

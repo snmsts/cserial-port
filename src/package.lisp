@@ -29,4 +29,5 @@
            :serial-stream
            :make-serial-stream
            :with-serial
+           :with-timeout
            :timeout-error))
