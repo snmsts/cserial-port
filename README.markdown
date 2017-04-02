@@ -29,8 +29,27 @@ Common Lisp library for interacting with serial ports.
 (with-serial (rs1 1)
   (let ((stream (make-serial-stream rs1)))
     ;; Allow to use write/read-sequence.
-    (write-sequence 
+    (write-sequence
       ;; Sending 'Hi'
       (make-array 2 :element-type '(unsigned-byte 8) :initial-contents '(72 105))
       stream)))
+
+;; Using a timeout
+(with-serial (rs1 1)
+  (handler-case
+      (write-serial-byte-vector
+        (babel:string-to-octets "Hello")
+        rs1
+        :timeout-ms 500)
+    (timeout-error ()
+      (error "The request timed out."))))
+
+;; Using timeout with gray-stream interface
+(with-serial (rs1 1)
+  (let ((stream (make-serial-stream rs1)))
+    (handler-case
+        (with-timeout (500) ;; ms
+         ...)
+      (timeout-error ()
+        (error "The request timed out.")))))
 ```
