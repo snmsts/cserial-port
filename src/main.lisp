@@ -89,8 +89,13 @@ The result state is a list giving the state of each line in the same order as th
   "Reads a byte from a serial port. will return count-read-bytes or nil when timeout."
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
-  (cffi:with-pointer-to-vector-data (buf-sap buf)
-    (%read serial buf-sap (- end start) timeout-ms)))
+  (cffi:with-foreign-object (buf-sap :unsigned-char (- end start))
+    (let ((bytes (%read serial buf-sap (- end start) timeout-ms)))
+      (loop
+         for i from start to (+ start (1- bytes))
+         for j from 0     to (1- bytes)
+         do (setf (aref buf i) (cffi:mem-aref buf-sap :unsigned-char j)))
+      bytes)))
 
 (defun read-serial-string (string serial &key (timeout-ms *default-timeout-ms*) (start 0) (end nil))
   "Reads a string from a serial port."
