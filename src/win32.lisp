@@ -133,15 +133,21 @@
   (WriteTotalTimeoutMultiplier dword)
   (WriteTotalTimeoutConstant dword))
 
+;; typedef struct _COMSTAT {
+;;   DWORD fCtsHold : 1;
+;;   DWORD fDsrHold : 1;
+;;   DWORD fRlsdHold : 1;
+;;   DWORD fXoffHold : 1;
+;;   DWORD fXoffSent : 1;
+;;   DWORD fEof : 1;
+;;   DWORD fTxim : 1;
+;;   DWORD fReserved : 25;
+;;   DWORD cbInQue;
+;;   DWORD cbOutQue;
+;; } COMSTAT, *LPCOMSTAT;
+
 (cffi:defcstruct comstat
-  (fCtsHold dword)
-  (fDsrHold  dword)
-  (fRlsdHold dword)
-  (fXoffHold dword)
-  (fXoffSent dword)
-  (fEof dword)
-  (fTxim dword)
-  (fReserved dword)
+  (flags dword) ; see definition of flags above
   (cbInQue dword)
   (cbOutQue dword))
 
@@ -442,5 +448,11 @@
           (win32-reset-event evt)
           (win32-close-handle evt))))))
 
-
+(defmethod %input-available-p ((s win32-serial))
+  (cffi:with-foreign-object (error-flags 'lpdword)
+    (cffi:with-foreign-object (com-stat 'lpcomstat)
+      (win32-clear-comm-error (serial-fd s) error-flags com-stat)
+      ;; cbInQue: number of bytes received by the serial provider but not yet read
+      ;; converted to boolean
+      (plusp (cffi:foreign-slot-value com-stat '(:struct comstat) 'cbInQue)))))
 
