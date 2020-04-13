@@ -133,15 +133,21 @@
   (WriteTotalTimeoutMultiplier dword)
   (WriteTotalTimeoutConstant dword))
 
+;; typedef struct _COMSTAT {
+;;   DWORD fCtsHold : 1;
+;;   DWORD fDsrHold : 1;
+;;   DWORD fRlsdHold : 1;
+;;   DWORD fXoffHold : 1;
+;;   DWORD fXoffSent : 1;
+;;   DWORD fEof : 1;
+;;   DWORD fTxim : 1;
+;;   DWORD fReserved : 25;
+;;   DWORD cbInQue;
+;;   DWORD cbOutQue;
+;; } COMSTAT, *LPCOMSTAT;
+
 (cffi:defcstruct comstat
-  (fCtsHold dword)
-  (fDsrHold  dword)
-  (fRlsdHold dword)
-  (fXoffHold dword)
-  (fXoffSent dword)
-  (fEof dword)
-  (fTxim dword)
-  (fReserved dword)
+  (flags dword) ; see definition of flags above
   (cbInQue dword)
   (cbOutQue dword))
 
