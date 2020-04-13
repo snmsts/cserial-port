@@ -448,5 +448,11 @@
           (win32-reset-event evt)
           (win32-close-handle evt))))))
 
-
+(defmethod %input-available-p ((s win32-serial))
+  (cffi:with-foreign-object (error-flags 'lpdword)
+    (cffi:with-foreign-object (com-stat 'lpcomstat)
+      (win32-clear-comm-error (serial-fd s) error-flags com-stat)
+      ;; cbInQue: number of bytes received by the serial provider but not yet read
+      ;; converted to boolean
+      (plusp (cffi:foreign-slot-value com-stat '(:struct comstat) 'cbInQue)))))
 
