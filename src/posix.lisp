@@ -27,6 +27,10 @@
 (defcfun ("cfsetospeed" cfsetospeed) :int
   (termios-p :pointer) ;;struct termios *
   (speed speed-t))
+(defcfun ("ioctl" ioctl) :int
+  (fd :int)
+  (request :unsigned-long)
+  (arg-p :pointer))
 
 ;; I'm not sure 'lognot' are available for this use or not. and in this case speed is not a matter at all.
 (defun off (flag &rest patterns)
@@ -187,3 +191,40 @@ deci-seconds.")))
                  (not (null timeout-ms)))
         (error 'timeout-error))
       count)))
+
+(defmethod %get-serial-state ((s posix-serial) keys)
+  (with-slots (fd) s
+    (with-foreign-object (status :int)
+      (unless (zerop (ioctl fd TIOCMGET status))
+        (error "Unable to get serial state"))
+      (let ((state (foreign-bitfield-symbols 'modem-state (mem-ref status :int))))
+        (mapcar (lambda (entry) (when (member entry state) t)) keys)))))
+
+(defmethod %set-serial-state ((s posix-serial)
+                              &key
+                                (dtr nil dtr-supplied-p)
+                                (rts nil rts-supplied-p)
+                                (break nil break-supplied-p))
+  (declare (ignore break))
+  (when break-supplied-p
+    (error "BREAK not yet implemented"))
+  (with-slots (fd) s
+    (let ((bits-to-clear nil)
+          (bits-to-set nil))
+      (flet ((process-bit (name value set-p)
+               (when set-p
+                 (if value
+                     (push name bits-to-set)
+                     (push name bits-to-clear)))))
+        (process-bit :dtr dtr dtr-supplied-p)
+        (process-bit :rts rts rts-supplied-p)
+        (unless (null bits-to-clear)
+          (with-foreign-object (bits :int)
+            (setf (mem-ref bits :int) (foreign-bitfield-value 'modem-state bits-to-clear))
+            (unless (zerop (ioctl fd TIOCMBIC bits))
+              (error "Unable to clear bits"))))
+        (unless (null bits-to-set)
+          (with-foreign-object (bits :int)
+            (setf (mem-ref bits :int) (foreign-bitfield-value 'modem-state bits-to-set))
+            (unless (zerop (ioctl fd TIOCMBIS bits))
+              (error "Unable to set bits"))))))))
