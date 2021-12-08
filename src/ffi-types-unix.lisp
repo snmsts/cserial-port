@@ -1,5 +1,6 @@
 (in-package :cserial-port)
 
+(include "sys/ioctl.h")
 (include "termios.h")
 
 (constant (B0 "B0"))
@@ -114,3 +115,18 @@
   (cflag "c_cflag"  :type tcflag-t)
   (lflag "c_lflag"  :type tcflag-t)
   (cc "c_cc"        :type cc-t :count NCCS))
+
+;;ioctl
+
+(constant (TIOCMGET "TIOCMGET"))
+(constant (TIOCMSET "TIOCMSET"))
+(constant (TIOCMBIC "TIOCMBIC"))
+(constant (TIOCMBIS "TIOCMBIS"))
+
+(bitfield modem-state
+  ((:dsr "TIOCM_DSR"))
+  ((:dtr "TIOCM_DTR"))
+  ((:rts "TIOCM_RTS"))
+  ((:cts "TIOCM_CTS"))
+  ((:dcd "TIOCM_CAR"))
+  ((:ring "TIOCM_RNG")))

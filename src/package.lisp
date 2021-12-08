@@ -9,9 +9,12 @@
   (:import-from :osicat-posix :o-rdwr :o-noctty :o-ndelay :getpgrp :fcntl :f-setfl)
   (:import-from :cffi
                 :defcfun
+                :foreign-bitfield-symbols
+                :foreign-bitfield-value
                 :with-foreign-object
                 :with-foreign-slots
-                :mem-aref)
+                :mem-aref
+                :mem-ref)
   (:export :open-serial
            :close-serial
            :get-serial-state

@@ -27,6 +27,10 @@
 (defcfun ("cfsetospeed" cfsetospeed) :int
   (termios-p :pointer) ;;struct termios *
   (speed speed-t))
+(defcfun ("ioctl" ioctl) :int
+  (fd :int)
+  (request :unsigned-long)
+  (arg-p :pointer))
 
 ;; I'm not sure 'lognot' are available for this use or not. and in this case speed is not a matter at all.
 (defun off (flag &rest patterns)
@@ -37,7 +41,11 @@
 (defclass posix-serial (serial)
   ((tty :initarg :tty
 	:reader serial-tty
-	:documentation "tty")))
+	:documentation "tty")
+   (current-timeout-ds
+    :initform nil
+    :documentation "The current value of the timeout on the serial port, in
+deci-seconds.")))
 
 (defparameter *serial-class* 'posix-serial)
 
@@ -154,6 +162,69 @@
     (write fd buffer write-size)))
 
 (defmethod %read ((s posix-serial) buffer buffer-size timeout-ms)
-  (declare (ignorable timeout-ms)) ;; not supported yet
+  (with-slots (fd current-timeout-ds) s
+    ;; Use ceiling to ensure a value of 1 doesn't turn into 0 (no timeout)
+    (let ((timeout-ds (unless (null timeout-ms) (ceiling (/ timeout-ms 100)))))
+      (unless (eql timeout-ds current-timeout-ds)
+        (flet ((signal-error ()
+                 (error "Unable to set serial timeout")))
+          ;; User has changed the timeout. Update it in foreign land and locally.
+          (with-foreign-object (tty '(:struct termios))
+            (unless (zerop (tcgetattr fd tty))
+              (signal-error))
+            (with-foreign-slots ((cc) tty (:struct termios))
+              (let ((desired-vtime (if (null timeout-ds) 0 timeout-ds))
+                    (desired-vmin (if (null timeout-ds) 1 0)))
+                (setf (mem-aref cc 'cc-t VTIME) desired-vtime
+                      (mem-aref cc 'cc-t VMIN) desired-vmin)
+                ;; tcsetattr returns success if any change is made. So we need
+                ;; to getattr again and make sure both values were set
+                ;; appropriately.
+                (unless (and (zerop (tcsetattr fd TCSANOW tty))
+                             (zerop (tcgetattr fd tty))
+                             (= desired-vtime (mem-aref cc 'cc-t VTIME))
+                             (= desired-vmin (mem-aref cc 'cc-t VMIN)))
+                  (signal-error))))))
+        (setf current-timeout-ds timeout-ds)))
+    (let ((count (read fd buffer buffer-size)))
+      (when (and (zerop count)
+                 (not (null timeout-ms)))
+        (error 'timeout-error))
+      count)))
+
+(defmethod %get-serial-state ((s posix-serial) keys)
   (with-slots (fd) s
-    (read fd buffer buffer-size)))
+    (with-foreign-object (status :int)
+      (unless (zerop (ioctl fd TIOCMGET status))
+        (error "Unable to get serial state"))
+      (let ((state (foreign-bitfield-symbols 'modem-state (mem-ref status :int))))
+        (mapcar (lambda (entry) (when (member entry state) t)) keys)))))
+
+(defmethod %set-serial-state ((s posix-serial)
+                              &key
+                                (dtr nil dtr-supplied-p)
+                                (rts nil rts-supplied-p)
+                                (break nil break-supplied-p))
+  (declare (ignore break))
+  (when break-supplied-p
+    (error "BREAK not yet implemented"))
+  (with-slots (fd) s
+    (let ((bits-to-clear nil)
+          (bits-to-set nil))
+      (flet ((process-bit (name value set-p)
+               (when set-p
+                 (if value
+                     (push name bits-to-set)
+                     (push name bits-to-clear)))))
+        (process-bit :dtr dtr dtr-supplied-p)
+        (process-bit :rts rts rts-supplied-p)
+        (unless (null bits-to-clear)
+          (with-foreign-object (bits :int)
+            (setf (mem-ref bits :int) (foreign-bitfield-value 'modem-state bits-to-clear))
+            (unless (zerop (ioctl fd TIOCMBIC bits))
+              (error "Unable to clear bits"))))
+        (unless (null bits-to-set)
+          (with-foreign-object (bits :int)
+            (setf (mem-ref bits :int) (foreign-bitfield-value 'modem-state bits-to-set))
+            (unless (zerop (ioctl fd TIOCMBIS bits))
+              (error "Unable to set bits"))))))))

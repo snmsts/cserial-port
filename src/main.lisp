@@ -54,9 +54,7 @@
   "The function get-serial-state queries various aspects of the state of the serial port associated with serial .
 The argument keys should be a list of one or more of the keywords :dsr and :cts . These cause get-serial-state to check the DSR and CTS lines respectively.
 The result state is a list giving the state of each line in the same order as they appear in the argument keys ."
-  ;;state
-  (error "not yet implemented")
-  nil)
+  (%get-serial-state serial keys))
 
 (defun read-serial-char (serial &key (timeout-ms *default-timeout-ms*))
   "Reads a character from a serial port. will return a character."
@@ -104,16 +102,16 @@ The result state is a list giving the state of each line in the same order as th
   "Checks whether a character is available on a serial port."
   (%input-available-p serial))
 
-(defun set-serial-state (serial &key dtr rts break)
+(defun set-serial-state (serial &rest args &key dtr rts break)
   "Changes various aspects of the state of a serial port."
+  (declare (ignore dtr rts break))
   t
   "Description
 The function set-serial-state changes various aspects of the state of the serial port associated with serial .
 The argument dtr , if supplied, controls the DTR line. A true value means set and nil means clear. If dtr is not supplied, the state is unchanged.
 The argument rts controls the RTS line in the same way.
 The argument break controls the break state of the data line in the same way."
-  (error "not yet implemented")
-  nil)
+  (apply #'%set-serial-state serial args))
 
 (defun wait-serial-state (serial keys &key (timeout-ms *default-timeout-ms*))
   "Waits for some aspect of the state of a serial port to change."

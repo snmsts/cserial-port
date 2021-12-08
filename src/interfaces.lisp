@@ -58,3 +58,6 @@
 
 (defgeneric% %write (class buffer write-size timeout-ms))
 (defgeneric% %read  (class buffer buffer-size timeout-ms))
+
+(defgeneric% %get-serial-state (class keys))
+(defgeneric% %set-serial-state (class &key dtr rts break))
