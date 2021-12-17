@@ -88,7 +88,7 @@ The result state is a list giving the state of each line in the same order as th
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
   (cffi:with-pointer-to-vector-data (buf-sap buf)
-    (%read serial buf-sap (- end start) timeout-ms)))
+    (%read serial (cffi:inc-pointer buf-sap start) (- end start) timeout-ms)))
 
 (defun read-serial-string (string serial &key (timeout-ms *default-timeout-ms*) (start 0) (end nil))
   "Reads a string from a serial port."
@@ -149,7 +149,7 @@ If timeout is non-nil then the function will return nil after that many seconds 
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
   (cffi:with-pointer-to-vector-data (data-sap bytes)
-    (%write serial data-sap (- end start) timeout-ms)))
+    (%write serial (cffi:inc-pointer data-sap start) (- end start) timeout-ms)))
 
 ;;more
 
