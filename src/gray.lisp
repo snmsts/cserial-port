@@ -26,6 +26,3 @@
 (defmethod stream-write-sequence ((stream serial-stream) sequence start end &key)
   (write-serial-byte-vector sequence (stream-serial stream) :start start :end end)
   sequence)
-
-(defmethod stream-finish-output ((stream serial-stream))
-  (close-serial (stream-serial stream)))
