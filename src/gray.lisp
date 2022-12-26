@@ -27,8 +27,5 @@
   (write-serial-byte-vector sequence (stream-serial stream) :start start :end end)
   sequence)
 
-(defmethod stream-finish-output ((stream serial-stream))
-  (close-serial (stream-serial stream)))
-
 (defmethod stream-listen ((stream serial-stream))
   (serial-input-available-p (stream-serial stream)))
