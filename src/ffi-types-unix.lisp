@@ -122,6 +122,7 @@
 (constant (TIOCMSET "TIOCMSET"))
 (constant (TIOCMBIC "TIOCMBIC"))
 (constant (TIOCMBIS "TIOCMBIS"))
+(constant (FIONREAD "FIONREAD"))
 
 (bitfield modem-state
   ((:dsr "TIOCM_DSR"))

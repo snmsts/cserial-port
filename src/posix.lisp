@@ -236,3 +236,10 @@ deci-seconds.")))
             (setf (mem-ref bits :int) (foreign-bitfield-value 'modem-state bits-to-set))
             (unless (zerop (ioctl fd TIOCMBIS bits))
               (error "Unable to set bits"))))))))
+
+(defmethod %input-available-p ((s posix-serial))
+  (with-slots (fd) s
+    (with-foreign-object (nbytes :int)
+      (unless (zerop (ioctl fd FIONREAD nbytes))
+	(error "Unable to get number of bytes available"))
+      (> (mem-ref nbytes :int) 0))))
