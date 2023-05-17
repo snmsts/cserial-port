@@ -21,8 +21,8 @@
      (data-bits *default-data-bits*)
      (stop-bits *default-stop-bits*)
      (parity *default-parity*)
+     (cts-flow-p nil)
      ;; below are not yet supported
-     cts-flow-p
      dsr-flow-p
      dtr
      rts
@@ -40,6 +40,7 @@
                 :stop-bits stop-bits
                 :parity parity
                 :encoding encoding
+                :cts-flow-p cts-flow-p
                 args)
          :name name))
 

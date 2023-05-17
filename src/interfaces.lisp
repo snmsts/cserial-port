@@ -2,26 +2,29 @@
 
 (defclass serial ()
   ((name :initarg :name
-	 :reader serial-name
-	 :documentation "Device name")
+	     :reader serial-name
+	     :documentation "Device name")
    (fd :initarg :fd
        :reader serial-fd
        :documentation "opend handle")
    (encoding :initarg :encoding
-	     :reader serial-encoding
-	     :documentation "encoding")
+	         :reader serial-encoding
+	         :documentation "encoding")
    (baud-rate :initarg :baud-rate
-	      :reader serial-baud-rate
-	      :documentation "baud-rate")
+	          :reader serial-baud-rate
+	          :documentation "baud-rate")
    (data-bits :initarg :data-bits
               :reader serial-data-bits
               :documentation "Number of data-bits.")
    (stop-bits :initarg :stop-bits
               :accessor serial-stop-bits
-	     :documentation "Number of stop-bits")
+	          :documentation "Number of stop-bits")
    (parity :initarg :parity
-	   :accessor serial-parity
-	   :documentation "Parity checking."))
+	       :accessor serial-parity
+	       :documentation "Parity checking.")
+   (cts-flow-p :initarg :cts-flow-p
+               :accessor serial-cts-flow-p
+               :documentation "Enable Hardware Control Flow"))
   (:documentation ""))
 
 (defvar *serial-class* 'serial)
