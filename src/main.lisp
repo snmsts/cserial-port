@@ -81,8 +81,9 @@ The result state is a list giving the state of each line in the same order as th
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
   (cffi:with-foreign-object (b :unsigned-char 1)
-    (when (= (%read serial b 1 timeout-ms) 1)
-      (cffi:mem-aref b :unsigned-char))))
+    (if (= (%read serial b 1 timeout-ms) 1)
+        (cffi:mem-aref b :unsigned-char)
+        :eof)))
 
 (defun read-serial-byte-vector (buf serial &key (timeout-ms *default-timeout-ms*) (start 0) (end (length buf)))
   "Reads a byte from a serial port. will return count-read-bytes or nil when timeout."
