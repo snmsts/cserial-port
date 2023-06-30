@@ -32,17 +32,22 @@
      write-total-base-timeout
      write-total-byte-timeout)
   "Attempts to open the named serial port and return a serial object."
-  (setq name (let ((name (or name *default-name*)))
-               (if (numberp name) (%default-name *serial-class* name) name)))
-  (%open (apply #'make-instance *serial-class*
-                :baud-rate baud-rate
-                :data-bits data-bits
-                :stop-bits stop-bits
-                :parity parity
-                :encoding encoding
-                :cts-flow-p cts-flow-p
-                args)
-         :name name))
+  (if (typep name 'serial)
+      (%open name :name (serial-name name))
+    (progn
+      (setq name (let ((name (or name *default-name*)))
+                   (if (numberp name) (%default-name *serial-class* name) name)))
+      (%open (apply #'make-instance *serial-class*
+                    :baud-rate baud-rate
+                    :data-bits data-bits
+                    :stop-bits stop-bits
+                    :parity parity
+                    :encoding encoding
+                    :cts-flow-p cts-flow-p
+                    :name name
+                    args)
+             :name name))))
+
 
 (defun close-serial (serial)
   "Closes a serial port"
