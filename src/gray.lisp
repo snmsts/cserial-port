@@ -32,3 +32,6 @@
 
 (defmethod stream-finish-output ((stream serial-stream))
   (serial-finish-output (stream-serial stream)))
+
+(defmethod output-available ((stream serial-stream))
+  (output-available (stream-serial stream)))

@@ -256,7 +256,7 @@ deci-seconds.")))
       (error "Unable to drain serial port"))
     nil))
 
-(defun output-available (s)
+(defmethod output-available ((s posix-serial))
   "Get the number of bytes in the output buffer"
   (with-slots (fd) s
     (with-foreign-object (bytes :int)
