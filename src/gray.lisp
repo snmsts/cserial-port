@@ -29,3 +29,6 @@
 
 (defmethod stream-listen ((stream serial-stream))
   (serial-input-available-p (stream-serial stream)))
+
+(defmethod stream-finish-output ((stream serial-stream))
+  (serial-finish-output (stream-serial stream)))

@@ -109,6 +109,10 @@ The result state is a list giving the state of each line in the same order as th
   "Checks whether a character is available on a serial port."
   (%input-available-p serial))
 
+(defun serial-finish-output (serial)
+  "Wait for the transmission of the content of the output buffer before returning"
+  (%finish-output serial))
+
 (defun set-serial-state (serial &rest args &key dtr rts break)
   "Changes various aspects of the state of a serial port."
   (declare (ignore dtr rts break))

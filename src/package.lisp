@@ -35,4 +35,5 @@
            :with-timeout
            :timeout-error
            :serial-name
-           :serial))
+           :serial
+           :output-available))

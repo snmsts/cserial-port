@@ -31,6 +31,10 @@
   (fd :int)
   (request :unsigned-long)
   (arg-p :pointer))
+(defcfun ("ioctl" ioctl-i) :int
+  (fd :int)
+  (request :unsigned-long)
+  (arg-i :int))
 
 ;; I'm not sure 'lognot' are available for this use or not. and in this case speed is not a matter at all.
 (defun off (flag &rest patterns)
@@ -48,17 +52,6 @@
 deci-seconds.")))
 
 (defparameter *serial-class* 'posix-serial)
-
-;; Missing serial-posix functions on unix:
-(defconstant FIONREAD #x541B)
-(defun input-available (s)
-  (with-slots (fd) s
-    (with-foreign-object (bytes :int)
-      (ioctl fd FIONREAD bytes)
-      (mem-ref bytes :int))))
-(defmethod %input-available-p ((s posix-serial)) (> (input-available s) 0))
-(defmethod sb-gray:stream-listen ((stream serial))
-  (serial-input-available-p (slot-value stream 'serial)))
 
 (defmethod %baud-rate ((s posix-serial) &optional baud-rate)
   (case (or baud-rate (serial-baud-rate s))
@@ -254,3 +247,17 @@ deci-seconds.")))
       (unless (zerop (ioctl fd FIONREAD nbytes))
 	(error "Unable to get number of bytes available"))
       (> (mem-ref nbytes :int) 0))))
+
+(defmethod %finish-output ((s posix-serial))
+  (with-slots (fd) s
+    ;; tcdrain
+    (unless (zerop (ioctl-i fd OSICAT-POSIX:TCSBRK 1))
+      (error "Unable to drain serial port"))
+    nil))
+
+(defun output-available (s)
+  "Get the number of bytes in the output buffer"
+  (with-slots (fd) s
+    (with-foreign-object (bytes :int)
+      (ioctl fd OSICAT-POSIX:TIOCOUTQ bytes)
+      (mem-ref bytes :int))))

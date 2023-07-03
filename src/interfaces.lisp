@@ -54,6 +54,7 @@
 (defgeneric% %valid-fd-p (class))
 (defgeneric% %set-invalid-fd (class))
 (defgeneric% %input-available-p (class))
+(defgeneric% %finish-output (class))
 (defgeneric% %default-name (class &optional number))
 
 (defgeneric% %close (class))
