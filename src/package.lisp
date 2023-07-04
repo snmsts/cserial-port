@@ -36,4 +36,5 @@
            :timeout-error
            :serial-name
            :serial
-           :output-available))
+           :output-available
+           :serial-fd))

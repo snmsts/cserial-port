@@ -246,8 +246,13 @@ deci-seconds.")))
   (with-slots (fd) s
     (with-foreign-object (nbytes :int)
       (unless (zerop (ioctl fd FIONREAD nbytes))
-	(error "Unable to get number of bytes available"))
+        (error "Unable to get number of bytes available"))
       (> (mem-ref nbytes :int) 0))))
+
+(defmethod %clear-input ((s posix-serial))
+  (with-slots (fd) s
+    (unless (zerop (tcflush fd 0))
+      (error "Unable to flush input buffer"))))
 
 (defmethod %finish-output ((s posix-serial))
   (with-slots (fd) s
