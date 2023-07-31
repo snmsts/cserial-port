@@ -31,6 +31,10 @@
   (fd :int)
   (request :unsigned-long)
   (arg-p :pointer))
+(defcfun ("ioctl" ioctl-i) :int
+  (fd :int)
+  (request :unsigned-long)
+  (arg-i :int))
 
 ;; I'm not sure 'lognot' are available for this use or not. and in this case speed is not a matter at all.
 (defun off (flag &rest patterns)
@@ -116,13 +120,13 @@ deci-seconds.")))
 
 (defmethod %default-name ((s (eql 'posix-serial)) &optional (number 0))
   (format nil
-	  (or #+linux  "/dev/ttyS~A"
-	      #+freebsd "/dev/cuaa~A"
-	      #+windows (if (> number 9)
-			    "\\\\.\\COM~A"
-			    "COM~A")
-	      "/dont/know/where~A")
-	  number))
+          (or #+linux  "/dev/ttyS~A"
+              #+freebsd "/dev/cuaa~A"
+              #+windows (if (> number 9)
+                            "\\\\.\\COM~A"
+                            "COM~A")
+              "/dont/know/where~A")
+          number))
 
 (defmethod %close ((s posix-serial))
   (let ((fd (serial-fd s)))
@@ -132,35 +136,36 @@ deci-seconds.")))
   t)
 
 (defmethod %open ((s posix-serial)
-		  &key
-		    name)
+                  &key
+                    name)
   (let* ((ratedef (%baud-rate s))
-	 (fd (open name (logior o-rdwr o-noctty))))
+         (fd (open name (logior o-rdwr o-noctty))))
     (when (= -1 fd)
       (error "~A open error!!" name))
     (setf (slot-value s 'fd) fd)
     (with-foreign-object (tty '(:struct termios))
       (unless (and
-	       (zerop (tcgetattr fd tty))
-	       (zerop (cfsetispeed tty ratedef))
-	       (zerop (cfsetospeed tty ratedef)))
-	(%close fd)
-	(error "~A setspeed error!!" name))
+               (zerop (tcgetattr fd tty))
+               (zerop (cfsetispeed tty ratedef))
+               (zerop (cfsetospeed tty ratedef)))
+        (%close fd)
+        (error "~A setspeed error!!" name))
 
       (with-foreign-slots ((lflag iflag cflag oflag cc) tty (:struct termios))
-	(setf lflag (off lflag ICANON ECHO ECHONL IEXTEN ISIG))
-	(setf iflag (off iflag BRKINT ICRNL INPCK ISTRIP IXON))
-	(setf cflag (logior (off cflag PARENB CSTOPB CSIZE)
-			    (%data-bits s)
-			    (%parity s)
+        (setf lflag (off lflag ICANON ECHO ECHONL IEXTEN ISIG))
+        (setf iflag (off iflag BRKINT ICRNL INPCK ISTRIP IXON))
+        (setf cflag (logior (off cflag PARENB CSTOPB CSIZE)
+                            (if (serial-cts-flow-p s) CRTSCTS 0)
+                            (%data-bits s)
+                            (%parity s)
                             (%stop-bits s)
-			    HUPCL CLOCAL))
-	(setf oflag (off oflag OPOST))
-	(setf (mem-aref cc 'cc-t VTIME) 0)
-	(setf (mem-aref cc 'cc-t VMIN) 1))
+                            HUPCL CLOCAL))
+        (setf oflag (off oflag OPOST))
+        (setf (mem-aref cc 'cc-t VTIME) 0)
+        (setf (mem-aref cc 'cc-t VMIN) 1))
       (unless (zerop (tcsetattr fd TCSANOW tty))
-	(%close fd)
-	(error "unable to setup serial port"))
+        (%close fd)
+        (error "unable to setup serial port"))
       s)))
 
 (defmethod %write ((s posix-serial) buffer write-size timeout-ms)
@@ -241,5 +246,24 @@ deci-seconds.")))
   (with-slots (fd) s
     (with-foreign-object (nbytes :int)
       (unless (zerop (ioctl fd FIONREAD nbytes))
-	(error "Unable to get number of bytes available"))
+        (error "Unable to get number of bytes available"))
       (> (mem-ref nbytes :int) 0))))
+
+(defmethod %clear-input ((s posix-serial))
+  (with-slots (fd) s
+    (unless (zerop (tcflush fd 0))
+      (error "Unable to flush input buffer"))))
+
+(defmethod %finish-output ((s posix-serial))
+  (with-slots (fd) s
+    ;; tcdrain
+    (unless (zerop (ioctl-i fd OSICAT-POSIX:TCSBRK 1))
+      (error "Unable to drain serial port"))
+    nil))
+
+(defmethod output-available ((s posix-serial))
+  "Get the number of bytes in the output buffer"
+  (with-slots (fd) s
+    (with-foreign-object (bytes :int)
+      (ioctl fd OSICAT-POSIX:TIOCOUTQ bytes)
+      (mem-ref bytes :int))))

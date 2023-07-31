@@ -60,6 +60,7 @@
 ;;c_cflag
 (constant (CSIZE "CSIZE"))
 (constant (CSTOPB "CSTOPB"))
+(constant (CRTSCTS "CRTSCTS"))
 (constant (CREAD "CREAD"))
 (constant (PARENB "PARENB"))
 (constant (PARODD "PARODD"))

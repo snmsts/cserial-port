@@ -21,8 +21,8 @@
      (data-bits *default-data-bits*)
      (stop-bits *default-stop-bits*)
      (parity *default-parity*)
+     (cts-flow-p nil)
      ;; below are not yet supported
-     cts-flow-p
      dsr-flow-p
      dtr
      rts
@@ -32,16 +32,22 @@
      write-total-base-timeout
      write-total-byte-timeout)
   "Attempts to open the named serial port and return a serial object."
-  (setq name (let ((name (or name *default-name*)))
-               (if (numberp name) (%default-name *serial-class* name) name)))
-  (%open (apply #'make-instance *serial-class*
-                :baud-rate baud-rate
-                :data-bits data-bits
-                :stop-bits stop-bits
-                :parity parity
-                :encoding encoding
-                args)
-         :name name))
+  (if (typep name 'serial)
+      (%open name :name (serial-name name))
+    (progn
+      (setq name (let ((name (or name *default-name*)))
+                   (if (numberp name) (%default-name *serial-class* name) name)))
+      (%open (apply #'make-instance *serial-class*
+                    :baud-rate baud-rate
+                    :data-bits data-bits
+                    :stop-bits stop-bits
+                    :parity parity
+                    :encoding encoding
+                    :cts-flow-p cts-flow-p
+                    :name name
+                    args)
+             :name name))))
+
 
 (defun close-serial (serial)
   "Closes a serial port"
@@ -80,8 +86,9 @@ The result state is a list giving the state of each line in the same order as th
   (unless (%valid-fd-p serial)
     (error "invalid serial port ~S" serial))
   (cffi:with-foreign-object (b :unsigned-char 1)
-    (when (= (%read serial b 1 timeout-ms) 1)
-      (cffi:mem-aref b :unsigned-char))))
+    (if (= (%read serial b 1 timeout-ms) 1)
+        (cffi:mem-aref b :unsigned-char)
+        :eof)))
 
 (defun read-serial-byte-vector (buf serial &key (timeout-ms *default-timeout-ms*) (start 0) (end (length buf)))
   "Reads a byte from a serial port. will return count-read-bytes or nil when timeout."
@@ -101,6 +108,14 @@ The result state is a list giving the state of each line in the same order as th
 (defun serial-input-available-p (serial)
   "Checks whether a character is available on a serial port."
   (%input-available-p serial))
+
+(defun serial-finish-output (serial)
+  "Wait for the transmission of the content of the output buffer before returning"
+  (%finish-output serial))
+
+(defun serial-clear-input (serial)
+  "Clear the input buffer of the serial connection"
+  (%clear-input serial))
 
 (defun set-serial-state (serial &rest args &key dtr rts break)
   "Changes various aspects of the state of a serial port."
